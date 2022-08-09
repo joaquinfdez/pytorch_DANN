@@ -149,6 +149,9 @@ def main(args):
     params.lr = args.lr
     params.neural_network_name = args.neural_network_name
     params.load = args.load
+    params.epoch_init = args.epoch_init    
+
+    flag = True
     """
         Tensorboard
     """
@@ -201,16 +204,28 @@ def main(args):
                             {'params': class_classifier.parameters()},
                             {'params': domain_classifier.parameters()}], lr= params.lr, momentum= 0.9)
 
-    for epoch in range(params.epochs):
+    # Loading previous 
+    if utils.string_to_boolean(params.load):
+        _models = feature_extractor, class_classifier, domain_classifier
+        _models = utils.load_pytorch_models(_models, params.epoch_init)
+        feature_extractor, class_classifier, domain_classifier = _models
+        
+    # Training process
+    for epoch in range(params.epoch_init, params.epochs):
         print('Epoch: {}'.format(epoch))
-        dict_train = train_model.train(args.training_mode, feature_extractor, class_classifier, domain_classifier, class_criterion, domain_criterion,
-                    src_train_dataloader, tgt_train_dataloader, optimizer, epoch, dict_train)
-        dict_test = test.test(feature_extractor, class_classifier, domain_classifier, src_test_dataloader, tgt_test_dataloader, dict_test)
+        dict_train, _models = train_model.train(args.training_mode, feature_extractor, class_classifier, domain_classifier, class_criterion, domain_criterion,
+                             src_train_dataloader, tgt_train_dataloader, optimizer, epoch, writer, dict_train, flag)
+        dict_test = test.test(feature_extractor, class_classifier, domain_classifier, src_test_dataloader, tgt_test_dataloader, class_criterion, domain_criterion, dict_test)
 
         display_writer(dict_train, 
                        dict_test, 
                        writer)
-
+        # Save models periodically
+        if epoch % 1 == 0:
+            # if epoch != epoch_init:  
+            utils.save_pytorch_models(_models, epoch)            
+            # Saving dictionaries
+            utils.save_training_info(dict_train, dict_test)
         # Plot embeddings periodically.
         if epoch % params.embed_plot_epoch == 0 and params.fig_mode is not None:
             visualizePerformance(feature_extractor, class_classifier, domain_classifier, src_test_dataloader,
@@ -241,6 +256,8 @@ def parse_arguments(argv):
     parser.add_argument('--neural_network_name', type=str, default='dann', help='Choose a neural network name.')
 
     parser.add_argument('--load', type=str, default='False', help='Select train or retrain (False or True)')
+
+    parser.add_argument('--epoch_init', type=int, default=0, help='Init')
 
     
 

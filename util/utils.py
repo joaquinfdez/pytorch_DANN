@@ -307,10 +307,61 @@ def get_training_info(load = False):
         if not os.path.exists(folder):
             os.makedirs(folder)
             
-        with open('dict_train.json', 'r') as fp:
+        with open(folder + '/dict_train.json', 'r') as fp:
             dict_train = json.load(fp)
         
-        with open('dict_test.json', 'r') as fp:
+        with open(folder + '/dict_test.json', 'r') as fp:
             dict_test = json.load(fp)
 
     return dict_train, dict_test
+
+def load_pytorch_models(models, epoch):
+    feature_extractor, class_classifier, domain_classifier = models
+    # Check if folder exist, otherwise need to create it.
+    folder = os.path.abspath('./data/nn_stored/')
+
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+    if torch.cuda.device_count() > 1:
+            feature_extractor.module.load_state_dict(torch.load(folder + "/{}_feature_extractor_model_epoch{}.pth".format(params.neural_network_name, epoch)))
+            class_classifier.module.load_state_dict(torch.load(folder + "/{}_class_classifier_model_epoch{}.pth".format(params.neural_network_name, epoch)))
+            domain_classifier.module.load_state_dict(torch.load(folder + "/{}_domain_classifier_model_epoch{}.pth".format(params.neural_network_name, epoch)))
+    else:
+        feature_extractor.load_state_dict(torch.load(folder + "/{}_feature_extractor_model_epoch{}.pth".format(params.neural_network_name, epoch)))
+        class_classifier.load_state_dict(torch.load(folder + "/{}_class_classifier_model_epoch{}.pth".format(params.neural_network_name, epoch)))
+        domain_classifier.load_state_dict(torch.load(folder + "/{}_domain_classifier_model_epoch{}.pth".format(params.neural_network_name, epoch)))
+
+    models = feature_extractor, class_classifier, domain_classifier
+    return models
+
+def save_training_info(dict_train, dict_test):
+    print("Saving dictionaries.")
+    # Check if folder exist, otherwise need to create it.
+    folder = os.path.abspath('./data/metrics/')
+
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+        
+    with open(folder + '/dict_train.json', 'w') as fp:
+        json.dump(dict_train, fp)
+    
+    with open(folder + '/dict_test.json', 'w') as fp:
+        json.dump(dict_test, fp)
+
+def save_pytorch_models(models, epoch):
+    feature_extractor, class_classifier, domain_classifier = models
+    # Check if folder exist, otherwise need to create it.
+    folder = os.path.abspath('./data/nn_stored/')
+
+    if not os.path.exists(folder):
+        os.makedirs(folder)
+
+    if torch.cuda.device_count() > 1:
+        torch.save(feature_extractor.module.state_dict(), folder + "/{}_feature_extractor_model_epoch{}.pth".format(params.neural_network_name, epoch))
+        torch.save(class_classifier.module.state_dict(), folder + "/{}_class_classifier_model_epoch{}.pth".format(params.neural_network_name, epoch))
+        torch.save(domain_classifier.module.state_dict(), folder + "/{}_domain_classifier_model_epoch{}.pth".format(params.neural_network_name, epoch))
+    else:
+        torch.save(feature_extractor.state_dict(), folder + "/{}_feature_extractor_model_epoch{}.pth".format(params.neural_network_name, epoch))
+        torch.save(class_classifier.state_dict(), folder + "/{}_class_classifier_model_epoch{}.pth".format(params.neural_network_name, epoch))
+        torch.save(domain_classifier.state_dict(), folder + "/{}_domain_classifier_model_epoch{}.pth".format(params.neural_network_name, epoch))

@@ -9,7 +9,7 @@ import torch.optim as optim
 
 
 def train(training_mode, feature_extractor, class_classifier, domain_classifier, class_criterion, domain_criterion,
-          source_dataloader, target_dataloader, optimizer, epoch, dict_train):
+          source_dataloader, target_dataloader, optimizer, epoch, writer, dict_train, flag):
     """
     Execute target domain adaptation
     :param training_mode:
@@ -22,8 +22,7 @@ def train(training_mode, feature_extractor, class_classifier, domain_classifier,
     :param target_dataloader:
     :param optimizer:
     :return:
-    """
-
+    """    
     # setup models
     feature_extractor.train()
     class_classifier.train()
@@ -92,6 +91,19 @@ def train(training_mode, feature_extractor, class_classifier, domain_classifier,
             loss = class_loss + params.theta * domain_loss
             loss.backward()
             optimizer.step()
+            
+            # Saving graph model
+            # if(flag):
+            #     # Writer of model
+            #     writer.add_graph(feature_extractor, (input1))
+            #     writer.flush()
+
+            #     writer.add_graph(class_classifier, (src_feature))
+            #     writer.flush()
+
+            #     writer.add_graph(domain_classifier, (src_feature, constant))
+            #     writer.flush()
+            #     flag = False
 
             # print loss
             if (batch_idx + 1) % 10 == 0:
@@ -177,4 +189,5 @@ def train(training_mode, feature_extractor, class_classifier, domain_classifier,
     dict_train["domain_label_loss_tgt"].append(domain_label_loss_tgt)
     dict_train["epoch"].append(epoch)
     
-    return dict_train
+    models = feature_extractor, class_classifier, domain_classifier
+    return dict_train, models

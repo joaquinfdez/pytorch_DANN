@@ -1,2 +1,4 @@
 *.pyc
 runs
+./data/nn_stored/
+./data/metrics/
