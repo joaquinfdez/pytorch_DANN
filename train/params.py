@@ -6,8 +6,8 @@ embed_plot_epoch=10
 
 # model params
 use_gpu = True
-dataset_mean = (0.5, 0.5, 0.5)
-dataset_std = (0.5, 0.5, 0.5)
+dataset_mean = (0.5, )
+dataset_std = (0.5, )
 
 batch_size = 512
 epochs = 1000

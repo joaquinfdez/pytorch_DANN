@@ -10,7 +10,7 @@ import torch.optim as optim
 import numpy as np
 
 from models import models
-from train import test, train, params
+from train import test, train_model, params
 from util import utils
 from sklearn.manifold import TSNE
 
@@ -165,7 +165,7 @@ def main(args):
 
     for epoch in range(params.epochs):
         print('Epoch: {}'.format(epoch))
-        train.train(args.training_mode, feature_extractor, class_classifier, domain_classifier, class_criterion, domain_criterion,
+        train_model.train(args.training_mode, feature_extractor, class_classifier, domain_classifier, class_criterion, domain_criterion,
                     src_train_dataloader, tgt_train_dataloader, optimizer, epoch)
         test.test(feature_extractor, class_classifier, domain_classifier, src_test_dataloader, tgt_test_dataloader)
 
