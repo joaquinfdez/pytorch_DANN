@@ -9,7 +9,7 @@ import torch.optim as optim
 
 
 def train(training_mode, feature_extractor, class_classifier, domain_classifier, class_criterion, domain_criterion,
-          source_dataloader, target_dataloader, optimizer, epoch):
+          source_dataloader, target_dataloader, optimizer, epoch, dict_train):
     """
     Execute target domain adaptation
     :param training_mode:
@@ -32,6 +32,11 @@ def train(training_mode, feature_extractor, class_classifier, domain_classifier,
     # steps
     start_steps = epoch * len(source_dataloader)
     total_steps = params.epochs * len(source_dataloader)
+
+    # Setup metrics
+    class_label_loss = 0.0 # Class label  
+    domain_label_loss_src = 0.0 # Domain real 
+    domain_label_loss_tgt = 0.0 # Domain that we want to adapt 
 
     for batch_idx, (sdata, tdata) in enumerate(zip(source_dataloader, target_dataloader)):
 
@@ -72,6 +77,7 @@ def train(training_mode, feature_extractor, class_classifier, domain_classifier,
             # compute the class loss of src_feature
             class_preds = class_classifier(src_feature)
             class_loss = class_criterion(class_preds, label1)
+            class_label_loss += class_loss.item()
 
             # compute the domain loss of src_feature and target_feature
             tgt_preds = domain_classifier(tgt_feature, constant)
@@ -79,6 +85,9 @@ def train(training_mode, feature_extractor, class_classifier, domain_classifier,
             tgt_loss = domain_criterion(tgt_preds, target_labels)
             src_loss = domain_criterion(src_preds, source_labels)
             domain_loss = tgt_loss + src_loss
+
+            domain_label_loss_src = src_loss.item()
+            domain_label_loss_tgt = tgt_loss.item()
 
             loss = class_loss + params.theta * domain_loss
             loss.backward()
@@ -114,6 +123,7 @@ def train(training_mode, feature_extractor, class_classifier, domain_classifier,
             # compute the class loss of src_feature
             class_preds = class_classifier(src_feature)
             class_loss = class_criterion(class_preds, label1)
+            class_label_loss += class_loss.item()
 
             class_loss.backward()
             optimizer.step()
@@ -146,7 +156,8 @@ def train(training_mode, feature_extractor, class_classifier, domain_classifier,
             # compute the class loss of src_feature
             class_preds = class_classifier(tgt_feature)
             class_loss = class_criterion(class_preds, label2)
-
+            class_label_loss += class_loss.item()
+            
             class_loss.backward()
             optimizer.step()
 
@@ -156,3 +167,14 @@ def train(training_mode, feature_extractor, class_classifier, domain_classifier,
                     batch_idx * len(input2), len(target_dataloader.dataset),
                     100. * batch_idx / len(target_dataloader), class_loss.item()
                 ))
+
+        class_label_loss /= len(source_dataloader)
+        domain_label_loss_src /= len(source_dataloader)
+        domain_label_loss_tgt /= len(source_dataloader)
+
+    dict_train["class_label_loss"].append(class_label_loss)
+    dict_train["domain_label_loss_src"].append(domain_label_loss_src)
+    dict_train["domain_label_loss_tgt"].append(domain_label_loss_tgt)
+    dict_train["epoch"].append(epoch)
+    
+    return dict_train

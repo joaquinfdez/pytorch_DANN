@@ -14,12 +14,13 @@ from train import test, train_model, params
 from util import utils
 from sklearn.manifold import TSNE
 
-import argparse, sys, os
+import argparse, sys
 
 import torch
-from torch.autograd import Variable
+# from torch.autograd import Variable
+from torch.utils.tensorboard import SummaryWriter
 
-import time
+from time import time, strftime
 
 
 
@@ -108,8 +109,33 @@ def visualizePerformance(feature_extractor, class_classifier, domain_classifier,
                          np.concatenate((s_tags, t_tags)), 'Domain Adaptation', imgName)
 
 
+def display_writer(dict_train, dict_test, writer):
 
 
+    # Tensorboard metrics
+    # Record loss into the writer
+    writer.add_scalars('Class_label_loss',
+                        {'train': dict_train["class_label_loss"][-1],
+                        'test': dict_test["class_label_loss"][-1],
+                        }, dict_train["epoch"][-1])  
+    writer.add_scalars('Domain_label_loss_src',
+                        {'train': dict_train["domain_label_loss_src"][-1],
+                        'test': dict_test["domain_label_loss_src"][-1],
+                        }, dict_train["epoch"][-1])        
+    writer.add_scalars('Domain_label_loss_tgt',
+                        {'train': dict_train["domain_label_loss_tgt"][-1],
+                        'test': dict_test["domain_label_loss_tgt"][-1],
+                        }, dict_train["epoch"][-1])   
+    writer.add_scalars('Domain_label_loss',
+                        {'train': dict_train["domain_label_loss_tgt"][-1] + dict_train["domain_label_loss_src"][-1],
+                        'test': dict_test["domain_label_loss_tgt"][-1] + dict_test["domain_label_loss_src"][-1],
+                        }, dict_train["epoch"][-1])  
+    
+    writer.flush()
+
+    writer.close()
+
+    print('Tensorboard is recording into folder.')
 def main(args):
 
     # Set global parameters.
@@ -121,7 +147,16 @@ def main(args):
     if params.embed_plot_epoch is None:
         params.embed_plot_epoch = args.embed_plot_epoch
     params.lr = args.lr
-
+    params.neural_network_name = args.neural_network_name
+    params.load = args.load
+    """
+        Tensorboard
+    """
+    PATH_to_log_dir = './runs/' + params.neural_network_name + '/'
+    utils.mkdirs(PATH_to_log_dir)
+    timestr = strftime("%m%d_%H%M")
+    writer = SummaryWriter(PATH_to_log_dir + params.neural_network_name + '(' + timestr + ')')
+    print('Tensorboard is recording into folder: ' + PATH_to_log_dir + params.neural_network_name + timestr)
 
     if args.save_dir is not None:
         params.save_dir = args.save_dir
@@ -143,6 +178,9 @@ def main(args):
         print('Images from test on target domain:')
         utils.displayImages(tgt_test_dataloader, imgName='target')
 
+    # init metrics
+    dict_train, dict_test = utils.get_training_info(utils.string_to_boolean(params.load))
+    
     # init models
     model_index = params.source_domain + '_' + params.target_domain
     feature_extractor = params.extractor_dict[model_index]
@@ -165,10 +203,13 @@ def main(args):
 
     for epoch in range(params.epochs):
         print('Epoch: {}'.format(epoch))
-        train_model.train(args.training_mode, feature_extractor, class_classifier, domain_classifier, class_criterion, domain_criterion,
-                    src_train_dataloader, tgt_train_dataloader, optimizer, epoch)
-        test.test(feature_extractor, class_classifier, domain_classifier, src_test_dataloader, tgt_test_dataloader)
+        dict_train = train_model.train(args.training_mode, feature_extractor, class_classifier, domain_classifier, class_criterion, domain_criterion,
+                    src_train_dataloader, tgt_train_dataloader, optimizer, epoch, dict_train)
+        dict_test = test.test(feature_extractor, class_classifier, domain_classifier, src_test_dataloader, tgt_test_dataloader, dict_test)
 
+        display_writer(dict_train, 
+                       dict_test, 
+                       writer)
 
         # Plot embeddings periodically.
         if epoch % params.embed_plot_epoch == 0 and params.fig_mode is not None:
@@ -196,6 +237,12 @@ def parse_arguments(argv):
     parser.add_argument('--embed_plot_epoch', type= int, default=100, help= 'Epoch number of plotting embeddings.')
 
     parser.add_argument('--lr', type= float, default= 0.01, help= 'Learning rate.')
+
+    parser.add_argument('--neural_network_name', type=str, default='dann', help='Choose a neural network name.')
+
+    parser.add_argument('--load', type=str, default='False', help='Select train or retrain (False or True)')
+
+    
 
     return parser.parse_args()
 

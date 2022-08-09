@@ -5,7 +5,7 @@ from torchvision import datasets, transforms
 
 from train import params
 from sklearn.manifold import TSNE
-
+import json
 
 import matplotlib.pyplot as plt
 plt.switch_backend('agg')
@@ -252,3 +252,65 @@ def plot_embedding(X, y, d, title=None, imgName=None):
         print('Saving ' + imgName + ' ...')
         plt.savefig(imgName)
         plt.close()
+
+def mkdirs(path):
+    try:
+        os.makedirs(path)
+    except OSError:
+        return -1
+    # else:
+        # print ("Successfully created the directory %s" % path)        
+
+def string_to_boolean(string):
+    """
+
+
+    Parameters
+    ----------
+    string : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    boolean : TYPE
+        DESCRIPTION.
+
+    """
+    boolean = False
+
+    if(string == 'True'):
+        boolean = True
+
+    return boolean
+
+def get_training_info(load = False):
+
+    if not(load):
+        print("Defining dictionaries.")
+        dict_train ={
+            "class_label_loss": [] ,
+            "domain_label_loss_src": [] ,
+            "domain_label_loss_tgt": [] ,
+            "epoch": []
+        } 
+
+        dict_test ={
+            "class_label_loss": [] ,
+            "domain_label_loss_src": [] ,
+            "domain_label_loss_tgt": []
+        }
+    else:
+        print("Loading dictionaries.")
+        # Check if folder exist, otherwise need to create it.
+        folder = os.path.abspath('./data/metrics/')
+
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+            
+        with open('dict_train.json', 'r') as fp:
+            dict_train = json.load(fp)
+        
+        with open('dict_test.json', 'r') as fp:
+            dict_test = json.load(fp)
+
+    return dict_train, dict_test

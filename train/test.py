@@ -8,7 +8,7 @@ import numpy as np
 from train import params
 
 
-def test(feature_extractor, class_classifier, domain_classifier, source_dataloader, target_dataloader):
+def test(feature_extractor, class_classifier, domain_classifier, source_dataloader, target_dataloader, dict_test):
     """
     Test the performance of the model
     :param feature_extractor: network used to extract feature from target samples
@@ -80,3 +80,10 @@ def test(feature_extractor, class_classifier, domain_classifier, source_dataload
         domain_correct, len(source_dataloader.dataset) + len(target_dataloader.dataset),
         100. * float(domain_correct) / (len(source_dataloader.dataset) + len(target_dataloader.dataset))
     ))
+    
+    
+    dict_test["class_label_loss"].append(0.0)
+    dict_test["domain_label_loss_src"].append(0.0)
+    dict_test["domain_label_loss_tgt"].append(0.0)
+    
+    return dict_test
