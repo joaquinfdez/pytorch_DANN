@@ -130,6 +130,12 @@ def display_writer(dict_train, dict_test, writer):
                         {'train': dict_train["domain_label_loss_tgt"][-1] + dict_train["domain_label_loss_src"][-1],
                         'test': dict_test["domain_label_loss_tgt"][-1] + dict_test["domain_label_loss_src"][-1],
                         }, dict_train["epoch"][-1])  
+    writer.add_scalars('Metrics',
+                       {
+                        "source_correct": dict_test["source_correct"][-1], 
+                        "target_correct": dict_test["target_correct"][-1], 
+                        "domain_correct": dict_test["domain_correct"][-1] 
+                       }, dict_train["epoch"][-1])  
     writer.add_scalars('Learning-Rate',
                           {'LR': params.lr,
                           'Momentum' :  params.momentum

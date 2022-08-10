@@ -298,7 +298,10 @@ def get_training_info(load = False):
         dict_test ={
             "class_label_loss": [] ,
             "domain_label_loss_src": [] ,
-            "domain_label_loss_tgt": []
+            "domain_label_loss_tgt": [] ,
+            "source_correct": [] ,
+            "target_correct": [] ,
+            "domain_correct": [] 
         }
     else:
         print("Loading dictionaries.")

@@ -110,6 +110,10 @@ def test(feature_extractor, class_classifier, domain_classifier, source_dataload
     dict_test["class_label_loss"].append(class_label_loss)
     dict_test["domain_label_loss_src"].append(domain_label_loss_src)
     dict_test["domain_label_loss_tgt"].append(domain_label_loss_tgt)
+    
+    dict_test["source_correct"].append(100. * float(source_correct) / len(source_dataloader.dataset))
+    dict_test["target_correct"].append(100. * float(target_correct) / len(target_dataloader.dataset))
+    dict_test["domain_correct"].append(100. * float(domain_correct) / (len(source_dataloader.dataset) + len(target_dataloader.dataset)))
 
     # Tensorboard visualization
     grid = torchvision.utils.make_grid(input1)
