@@ -130,6 +130,10 @@ def display_writer(dict_train, dict_test, writer):
                         {'train': dict_train["domain_label_loss_tgt"][-1] + dict_train["domain_label_loss_src"][-1],
                         'test': dict_test["domain_label_loss_tgt"][-1] + dict_test["domain_label_loss_src"][-1],
                         }, dict_train["epoch"][-1])  
+    writer.add_scalars('Learning-Rate',
+                          {'LR': params.lr,
+                          'Momentum' :  params.momentum
+                          }, dict_train["epoch"][-1])
     
     writer.flush()
 
@@ -146,7 +150,9 @@ def main(args):
     params.target_domain = args.target_domain
     if params.embed_plot_epoch is None:
         params.embed_plot_epoch = args.embed_plot_epoch
-    params.lr = args.lr
+    params.lr_initial = args.lr
+    params.lr = params.lr_initial
+    params.momentum = args.momentum
     params.neural_network_name = args.neural_network_name
     params.load = args.load
     params.epoch_init = args.epoch_init    
@@ -202,7 +208,7 @@ def main(args):
     # init optimizer
     optimizer = optim.SGD([{'params': feature_extractor.parameters()},
                             {'params': class_classifier.parameters()},
-                            {'params': domain_classifier.parameters()}], lr= params.lr, momentum= 0.9)
+                            {'params': domain_classifier.parameters()}], lr= params.lr, momentum= params.momentum)
 
     # Loading previous 
     if utils.string_to_boolean(params.load):
@@ -215,7 +221,7 @@ def main(args):
         print('Epoch: {}'.format(epoch))
         dict_train, _models = train_model.train(args.training_mode, feature_extractor, class_classifier, domain_classifier, class_criterion, domain_criterion,
                              src_train_dataloader, tgt_train_dataloader, optimizer, epoch, writer, dict_train, flag)
-        dict_test = test.test(feature_extractor, class_classifier, domain_classifier, src_test_dataloader, tgt_test_dataloader, class_criterion, domain_criterion, dict_test)
+        dict_test = test.test(feature_extractor, class_classifier, domain_classifier, src_test_dataloader, tgt_test_dataloader, class_criterion, domain_criterion, writer, dict_test)
 
         display_writer(dict_train, 
                        dict_test, 
@@ -252,6 +258,8 @@ def parse_arguments(argv):
     parser.add_argument('--embed_plot_epoch', type= int, default=100, help= 'Epoch number of plotting embeddings.')
 
     parser.add_argument('--lr', type= float, default= 0.01, help= 'Learning rate.')
+
+    parser.add_argument('--momentum', type= float, default= 0.9, help= 'Momentum.')
 
     parser.add_argument('--neural_network_name', type=str, default='dann', help='Choose a neural network name.')
 

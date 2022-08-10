@@ -4,11 +4,12 @@ Test the model with target domain
 import torch
 from torch.autograd import Variable
 import numpy as np
+import torchvision
 
 from train import params
 
 
-def test(feature_extractor, class_classifier, domain_classifier, source_dataloader, target_dataloader, class_criterion, domain_criterion, dict_test):
+def test(feature_extractor, class_classifier, domain_classifier, source_dataloader, target_dataloader, class_criterion, domain_criterion, writer, dict_test):
     """
     Test the performance of the model
     :param feature_extractor: network used to extract feature from target samples
@@ -48,7 +49,7 @@ def test(feature_extractor, class_classifier, domain_classifier, source_dataload
 
         output1 = class_classifier(feature_extractor(input1))
         # Losses
-        class_loss = class_criterion(output1, label1)
+        class_loss = class_criterion(output1, src_labels)
         class_label_loss += class_loss.item()
         # Metrics
         pred1 = output1.data.max(1, keepdim = True)[1]
@@ -57,7 +58,7 @@ def test(feature_extractor, class_classifier, domain_classifier, source_dataload
         src_preds = domain_classifier(feature_extractor(input1), constant)
         # Losses
         src_loss = domain_criterion(src_preds, src_labels)
-        domain_label_loss_src = src_loss.item()
+        domain_label_loss_src += src_loss.item()
         # Metrics
         src_preds = src_preds.data.max(1, keepdim= True)[1]
         src_correct += src_preds.eq(src_labels.data.view_as(src_preds)).cpu().sum()
@@ -86,7 +87,7 @@ def test(feature_extractor, class_classifier, domain_classifier, source_dataload
         tgt_preds = domain_classifier(feature_extractor(input2), constant)
         # Losses
         tgt_loss = domain_criterion(tgt_preds, tgt_labels)
-        domain_label_loss_tgt = tgt_loss.item()
+        domain_label_loss_tgt += tgt_loss.item()
         # Metrics
         tgt_preds = tgt_preds.data.max(1, keepdim=True)[1]
         tgt_correct += tgt_preds.eq(tgt_labels.data.view_as(tgt_preds)).cpu().sum()
@@ -109,5 +110,14 @@ def test(feature_extractor, class_classifier, domain_classifier, source_dataload
     dict_test["class_label_loss"].append(class_label_loss)
     dict_test["domain_label_loss_src"].append(domain_label_loss_src)
     dict_test["domain_label_loss_tgt"].append(domain_label_loss_tgt)
+
+    # Tensorboard visualization
+    grid = torchvision.utils.make_grid(input1)
+    writer.add_image('input_src', grid, 0)
+
+    grid = torchvision.utils.make_grid(input2)
+    writer.add_image('input_tgt', grid, 0)
+    
+    writer.flush()
     
     return dict_test

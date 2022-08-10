@@ -136,7 +136,8 @@ def optimizer_scheduler(optimizer, p):
     :return: optimizer
     """
     for param_group in optimizer.param_groups:
-        param_group['lr'] = 0.01 / (1. + 10 * p) ** 0.75
+        param_group['lr'] = params.lr_initial / (1. + 10 * p) ** 0.75
+        params.lr = param_group['lr']
 
     return optimizer
 

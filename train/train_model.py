@@ -58,7 +58,7 @@ def train(training_mode, feature_extractor, class_classifier, domain_classifier,
                 input2, label2 = Variable(input2), Variable(label2)
 
             # setup optimizer
-            optimizer = utils.optimizer_scheduler(optimizer, p)
+            # optimizer = utils.optimizer_scheduler(optimizer, p)
             optimizer.zero_grad()
 
             # prepare domain labels
@@ -85,8 +85,8 @@ def train(training_mode, feature_extractor, class_classifier, domain_classifier,
             src_loss = domain_criterion(src_preds, source_labels)
             domain_loss = tgt_loss + src_loss
 
-            domain_label_loss_src = src_loss.item()
-            domain_label_loss_tgt = tgt_loss.item()
+            domain_label_loss_src += src_loss.item()
+            domain_label_loss_tgt += tgt_loss.item()
 
             loss = class_loss + params.theta * domain_loss
             loss.backward()
