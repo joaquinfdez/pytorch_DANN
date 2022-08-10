@@ -9,7 +9,7 @@ import torchvision
 from train import params
 
 
-def test(feature_extractor, class_classifier, domain_classifier, source_dataloader, target_dataloader, class_criterion, domain_criterion, writer, dict_test):
+def test(feature_extractor, class_classifier, domain_classifier, source_dataloader, target_dataloader, class_criterion, domain_criterion, writer, epoch, dict_test):
     """
     Test the performance of the model
     :param feature_extractor: network used to extract feature from target samples
@@ -116,11 +116,13 @@ def test(feature_extractor, class_classifier, domain_classifier, source_dataload
     dict_test["domain_correct"].append(100. * float(domain_correct) / (len(source_dataloader.dataset) + len(target_dataloader.dataset)))
 
     # Tensorboard visualization
-    grid = torchvision.utils.make_grid(input1)
-    writer.add_image('input_src', grid, 0)
+    # Sampling test example
+    idx = torch.randint(len(input2),(50,))
+    grid = torchvision.utils.make_grid(input1[idx,:,:,:])
+    writer.add_image('input_src', grid, epoch)
 
-    grid = torchvision.utils.make_grid(input2)
-    writer.add_image('input_tgt', grid, 0)
+    grid = torchvision.utils.make_grid(input2[idx,:,:,:])
+    writer.add_image('input_tgt', grid, epoch)
     
     writer.flush()
     

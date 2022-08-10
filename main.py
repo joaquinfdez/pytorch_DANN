@@ -146,6 +146,47 @@ def display_writer(dict_train, dict_test, writer):
     writer.close()
 
     print('Tensorboard is recording into folder.')
+    
+def load_writer(dict_train, dict_test, writer):
+
+
+    for i in range(len(dict_train["class_label_loss"])):
+        # Tensorboard metrics
+        # Record loss into the writer
+        writer.add_scalars('Class_label_loss',
+                            {'train': dict_train["class_label_loss"][i],
+                            'test': dict_test["class_label_loss"][i],
+                            }, dict_train["epoch"][i])  
+        writer.add_scalars('Domain_label_loss_src',
+                            {'train': dict_train["domain_label_loss_src"][i],
+                            'test': dict_test["domain_label_loss_src"][i],
+                            }, dict_train["epoch"][i])        
+        writer.add_scalars('Domain_label_loss_tgt',
+                            {'train': dict_train["domain_label_loss_tgt"][i],
+                            'test': dict_test["domain_label_loss_tgt"][i],
+                            }, dict_train["epoch"][i])   
+        writer.add_scalars('Domain_label_loss',
+                            {'train': dict_train["domain_label_loss_tgt"][i] + dict_train["domain_label_loss_src"][i],
+                            'test': dict_test["domain_label_loss_tgt"][i] + dict_test["domain_label_loss_src"][i],
+                            }, dict_train["epoch"][i])  
+        writer.add_scalars('Metrics',
+                           {
+                            "source_correct": dict_test["source_correct"][i], 
+                            "target_correct": dict_test["target_correct"][i], 
+                            "domain_correct": dict_test["domain_correct"][i] 
+                           }, dict_train["epoch"][i])  
+        writer.add_scalars('Learning-Rate',
+                              {'LR': params.lr,
+                              'Momentum' :  params.momentum
+                              }, dict_train["epoch"][i])
+        
+        writer.flush()
+
+    writer.close()
+
+    print('Tensorboard is recording into folder.')
+
+    
 def main(args):
 
     # Set global parameters.
@@ -161,7 +202,7 @@ def main(args):
     params.momentum = args.momentum
     params.neural_network_name = args.neural_network_name
     params.load = args.load
-    params.epoch_init = args.epoch_init    
+    params.epoch_init = args.epoch_init if utils.string_to_boolean(params.load) else 0
 
     flag = True
     """
@@ -218,16 +259,19 @@ def main(args):
 
     # Loading previous 
     if utils.string_to_boolean(params.load):
+        print("Loading weights in models.")
         _models = feature_extractor, class_classifier, domain_classifier
         _models = utils.load_pytorch_models(_models, params.epoch_init)
         feature_extractor, class_classifier, domain_classifier = _models
+        
+        load_writer(dict_train, dict_test, writer)
         
     # Training process
     for epoch in range(params.epoch_init, params.epochs):
         print('Epoch: {}'.format(epoch))
         dict_train, _models = train_model.train(args.training_mode, feature_extractor, class_classifier, domain_classifier, class_criterion, domain_criterion,
                              src_train_dataloader, tgt_train_dataloader, optimizer, epoch, writer, dict_train, flag)
-        dict_test = test.test(feature_extractor, class_classifier, domain_classifier, src_test_dataloader, tgt_test_dataloader, class_criterion, domain_criterion, writer, dict_test)
+        dict_test = test.test(feature_extractor, class_classifier, domain_classifier, src_test_dataloader, tgt_test_dataloader, class_criterion, domain_criterion, writer, epoch, dict_test)
 
         display_writer(dict_train, 
                        dict_test, 
