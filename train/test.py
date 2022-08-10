@@ -49,7 +49,7 @@ def test(feature_extractor, class_classifier, domain_classifier, source_dataload
 
         output1 = class_classifier(feature_extractor(input1))
         # Losses
-        class_loss = class_criterion(output1, src_labels)
+        class_loss = class_criterion(output1, label1)
         class_label_loss += class_loss.item()
         # Metrics
         pred1 = output1.data.max(1, keepdim = True)[1]
@@ -78,7 +78,7 @@ def test(feature_extractor, class_classifier, domain_classifier, source_dataload
 
         output2 = class_classifier(feature_extractor(input2))
         # Losses
-        class_loss = class_criterion(output2, tgt_labels)
+        class_loss = class_criterion(output2, label2)
         class_label_loss += class_loss.item()
         # Metrics
         pred2 = output2.data.max(1, keepdim=True)[1]
