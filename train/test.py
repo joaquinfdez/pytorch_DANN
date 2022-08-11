@@ -117,12 +117,12 @@ def test(feature_extractor, class_classifier, domain_classifier, source_dataload
 
     # Tensorboard visualization
     # Sampling test example
-    idx = torch.randint(len(input2),(50,))
-    grid = torchvision.utils.make_grid(input1[idx,:,:,:])
-    writer.add_image('input_src', grid, epoch)
+    # idx = torch.randint(len(input2),(50,))
+    grid = torchvision.utils.make_grid(input1)
+    writer.add_image('input_src', grid, 0)
 
-    grid = torchvision.utils.make_grid(input2[idx,:,:,:])
-    writer.add_image('input_tgt', grid, epoch)
+    grid = torchvision.utils.make_grid(input2)
+    writer.add_image('input_tgt', grid, 0)
     
     writer.flush()
     

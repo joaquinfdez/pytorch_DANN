@@ -9,7 +9,7 @@ import torch.optim as optim
 
 import numpy as np
 
-from models import models
+# from models import models
 from train import test, train_model, params
 from util import utils
 from sklearn.manifold import TSNE
@@ -20,7 +20,7 @@ import torch
 # from torch.autograd import Variable
 from torch.utils.tensorboard import SummaryWriter
 
-from time import time, strftime
+from time import strftime
 
 
 
@@ -303,7 +303,7 @@ def parse_arguments(argv):
 
     parser.add_argument('--training_mode', type=str, default='dann', help='Choose a mode to train the model.')
 
-    parser.add_argument('--max_epoch', type=int, default=100, help='The max number of epochs.')
+    parser.add_argument('--max_epoch', type=int, default=1000, help='The max number of epochs.')
 
     parser.add_argument('--embed_plot_epoch', type= int, default=100, help= 'Epoch number of plotting embeddings.')
 
@@ -313,9 +313,9 @@ def parse_arguments(argv):
 
     parser.add_argument('--neural_network_name', type=str, default='dann', help='Choose a neural network name.')
 
-    parser.add_argument('--load', type=str, default='False', help='Select train or retrain (False or True)')
+    parser.add_argument('--load', type=str, default='True', help='Select train or retrain (False or True)')
 
-    parser.add_argument('--epoch_init', type=int, default=0, help='Init')
+    parser.add_argument('--epoch_init', type=int, default=90, help='Init')
 
     
 
