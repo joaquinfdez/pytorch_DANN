@@ -42,7 +42,9 @@ def train(training_mode, feature_extractor, class_classifier, domain_classifier,
         if training_mode == 'dann':
             # setup hyperparameters
             p = float(batch_idx + start_steps) / total_steps
+            print("p-->", p)
             constant = 2. / (1. + np.exp(-params.gamma * p)) - 1
+            print("constant-->", constant)
 
             # prepare the data
             input1, label1 = sdata

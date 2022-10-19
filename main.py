@@ -315,7 +315,7 @@ def parse_arguments(argv):
 
     parser.add_argument('--load', type=str, default='True', help='Select train or retrain (False or True)')
 
-    parser.add_argument('--epoch_init', type=int, default=90, help='Init')
+    parser.add_argument('--epoch_init', type=int, default=15, help='Init')
 
     
 
